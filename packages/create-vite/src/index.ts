@@ -20,15 +20,14 @@ const {
   yellow,
 } = colors
 
-// 使用 minimist 解析命令行参数时,避免将项目名称自动转换为数字
-// 通过指定 string: ['_'] 确保非选项参数(即 _ 数组)被解析为字符串
-// 为了修复 #4606 issue:当项目名称是纯数字时会被错误转换为数字类型
+// 使用 minimist 解析命令行参数
+// 通过指定 string: ['_'] 确保非选项参数(即 _ 数组)被解析为字符串 修复 #4606 issue:当项目名称是纯数字时会被错误转换为数字类型
 const argv = minimist<{
   template?: string
   help?: boolean
 }>(process.argv.slice(2), {
-  default: { help: false },
-  alias: { h: 'help', t: 'template' },
+  default: { help: false }, // 如果用户没有在命令行中提供 --help 或 -h 参数，help 将默认被设置为 false
+  alias: { h: 'help', t: 'template' }, // help 可以简写为 -h, template 可以简写为 -t
   string: ['_'],
 })
 
@@ -358,7 +357,7 @@ async function init() {
   // 获取模板参数，支持 --template 或 -t 简写
   const argTemplate = argv.template || argv.t
 
-  // 处理帮助命令
+  // 输入 `node index.js -h` or `node index.js -help` 输出提示信息
   const help = argv.help
   if (help) {
     console.log(helpMessage)
@@ -372,12 +371,21 @@ async function init() {
   const getProjectName = () =>
     targetDir === '.' ? path.basename(path.resolve()) : targetDir
 
+  console.log({
+    targetDir,
+    argTargetDir,
+    defaultTargetDir,
+    argTemplate,
+    getProjectName: getProjectName(),
+  })
+
   // 声明用于存储用户交互结果的变量
   let result: prompts.Answers<
     'projectName' | 'overwrite' | 'packageName' | 'framework' | 'variant'
   >
 
   // 设置命令行参数覆盖提示选项
+  // 比如: create-vite my-project --overwrite 将直接覆盖已存在的目录,不会显示确认提示
   prompts.override({
     overwrite: argv.overwrite,
   })
@@ -495,20 +503,23 @@ async function init() {
     return
   }
 
-  // 用户的选择
+  // 用户的选择:
+  // - framework: 选择的框架
+  // - overwrite: yes: 删除现有文件并继续、no: 取消操作、ignore: 忽略文件并继续
+  // - packageName: 用户输入的项目名称
+  // - variant: 框架变体-具体的模版
   const { framework, overwrite, packageName, variant } = result
 
+  // 项目目录
   const root = path.join(cwd, targetDir)
 
-  /**
-   * overwrite
-   * yes: 删除现有文件并继续
-   * no: 取消操作
-   * ignore: 忽略文件并继续
-   */
+  // 如果用户选择覆盖现有目录
   if (overwrite === 'yes') {
+    // 清空目标目录
     emptyDir(root)
   } else if (!fs.existsSync(root)) {
+    // 如果目标目录不存在,则创建该目录
+    // recursive: true 表示如果父目录不存在也会被创建
     fs.mkdirSync(root, { recursive: true })
   }
 
