@@ -674,29 +674,21 @@ async function init() {
   console.log()
 }
 
-/**
- * 格式化目标目录名称
- * @param targetDir 目标目录名称
- * @returns 格式化后的目录名称
- * - 去除首尾空格
- * - 移除末尾的斜杠
- */
+// 格式化目标目录名称，去除首尾空格、移除末尾的斜杠
 function formatTargetDir(targetDir: string | undefined) {
   return targetDir?.trim().replace(/\/+$/g, '')
 }
 
-/**
- * 复制文件或目录
- * @param src 源文件/目录路径
- * @param dest 目标文件/目录路径
- * - 如果是目录则调用 copyDir 进行递归复制
- * - 如果是文件则直接复制
- */
+// 复制文件或目录
 function copy(src: string, dest: string) {
+  // 获取源文件/目录的状态
   const stat = fs.statSync(src)
+  // 如果源文件/目录是一个目录
   if (stat.isDirectory()) {
+    // 调用 copyDir 函数进行递归复制目录
     copyDir(src, dest)
   } else {
+    // 如果源文件/目录是一个文件，则直接复制文件
     fs.copyFileSync(src, dest)
   }
 }
@@ -716,69 +708,54 @@ function isValidPackageName(projectName: string) {
   )
 }
 
-/**
- * 将项目名称转换为合法的包名
- * @param projectName 项目名称
- * @returns 合法的包名
- * 转换规则:
- * - 转为小写
- * - 空格替换为连字符
- * - 移除开头的 . 或 _
- * - 非法字符替换为连字符
- */
+// 将项目名称转换为合法的包名
 function toValidPackageName(projectName: string) {
   return projectName
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/^[._]/, '')
-    .replace(/[^a-z\d\-~]+/g, '-')
+    .trim() // 去除首尾空格
+    .toLowerCase() // 转换为小写
+    .replace(/\s+/g, '-') // 空格替换为连字符
+    .replace(/^[._]/, '') // 移除开头的 . 或 _
+    .replace(/[^a-z\d\-~]+/g, '-') // 非法字符替换为连字符
 }
 
 /**
  * 递归复制目录
  * @param srcDir 源目录路径
  * @param destDir 目标目录路径
- * - 创建目标目录
- * - 遍历源目录下的所有文件和子目录
- * - 递归复制每个文件和子目录
  */
 function copyDir(srcDir: string, destDir: string) {
+  // 创建目标目录
   fs.mkdirSync(destDir, { recursive: true })
+
+  // 遍历源目录下的所有文件和子目录
   for (const file of fs.readdirSync(srcDir)) {
     const srcFile = path.resolve(srcDir, file)
     const destFile = path.resolve(destDir, file)
+    // 递归复制每个文件和子目录
     copy(srcFile, destFile)
   }
 }
 
-/**
- * 检查目录是否为空
- * @param path 目录路径
- * @returns boolean
- * - 完全空目录返回 true
- * - 只包含 .git 目录也返回 true
- */
+//  检查目录是否为空， 完全空目录返回 true、只包含 .git 目录也返回 true
 function isEmpty(path: string) {
   const files = fs.readdirSync(path)
   return files.length === 0 || (files.length === 1 && files[0] === '.git')
 }
 
-/**
- * 清空目录内容
- * @param dir 要清空的目录路径
- * - 如果目录不存在则直接返回
- * - 保留 .git 目录
- * - 递归删除其他所有文件和目录
- */
+// 清空指定目录内容
 function emptyDir(dir: string) {
+  // 如果目录不存在则直接返回
   if (!fs.existsSync(dir)) {
     return
   }
+
+  // 遍历目录中的所有文件和子目录
   for (const file of fs.readdirSync(dir)) {
+    // 检查当前文件是否为 .git 目录，如果是，则跳过删除操作
     if (file === '.git') {
       continue
     }
+    // 递归删除当前文件或目录
     fs.rmSync(path.resolve(dir, file), { recursive: true, force: true })
   }
 }
@@ -786,7 +763,6 @@ function emptyDir(dir: string) {
 /**
  * 从 user-agent 字符串中解析包管理器信息
  * @param userAgent npm_config_user_agent 环境变量值
- * @returns 包管理器名称和版本
  * 示例: "npm/6.14.8 node/v14.15.1 darwin x64" => { name: "npm", version: "6.14.8" }
  */
 function pkgFromUserAgent(userAgent: string | undefined) {
@@ -803,16 +779,17 @@ function pkgFromUserAgent(userAgent: string | undefined) {
  * 配置 React SWC 支持
  * @param root 项目根目录
  * @param isTs 是否为 TypeScript 项目
- * - 替换 package.json 中的 plugin-react 为 plugin-react-swc
- * - 更新 vite.config 文件中的插件引用
  */
 function setupReactSwc(root: string, isTs: boolean) {
+  // 替换 package.json 中的 plugin-react 为 plugin-react-swc
   editFile(path.resolve(root, 'package.json'), (content) => {
     return content.replace(
       /"@vitejs\/plugin-react": ".+?"/,
       `"@vitejs/plugin-react-swc": "^3.5.0"`,
     )
   })
+
+  // 更新 vite.config 文件中的插件引用
   editFile(
     path.resolve(root, `vite.config.${isTs ? 'ts' : 'js'}`),
     (content) => {
@@ -825,12 +802,11 @@ function setupReactSwc(root: string, isTs: boolean) {
  * 编辑文件内容
  * @param file 文件路径
  * @param callback 内容处理函数
- * - 读取文件内容
- * - 通过回调函数处理内容
- * - 将处理后的内容写回文件
  */
 function editFile(file: string, callback: (content: string) => string) {
+  // 读取文件内容
   const content = fs.readFileSync(file, 'utf-8')
+  // 将通过回调函数处理后的内容写回文件
   fs.writeFileSync(file, callback(content), 'utf-8')
 }
 
