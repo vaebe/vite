@@ -73,25 +73,8 @@ type FrameworkVariant = {
   customCommand?: string // 自定义命令（可选）
 }
 
-// 框架配置
+// 框架配置-相比源码删除了一些框架配置
 const FRAMEWORKS: Framework[] = [
-  {
-    name: 'vanilla',
-    display: 'Vanilla',
-    color: yellow,
-    variants: [
-      {
-        name: 'vanilla-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'vanilla',
-        display: 'JavaScript',
-        color: yellow,
-      },
-    ],
-  },
   {
     name: 'vue',
     display: 'Vue',
@@ -118,161 +101,6 @@ const FRAMEWORKS: Framework[] = [
         display: 'Nuxt ↗',
         color: greenBright,
         customCommand: 'npm exec nuxi init TARGET_DIR',
-      },
-    ],
-  },
-  {
-    name: 'react',
-    display: 'React',
-    color: cyan,
-    variants: [
-      {
-        name: 'react-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'react-swc-ts',
-        display: 'TypeScript + SWC',
-        color: blue,
-      },
-      {
-        name: 'react',
-        display: 'JavaScript',
-        color: yellow,
-      },
-      {
-        name: 'react-swc',
-        display: 'JavaScript + SWC',
-        color: yellow,
-      },
-      {
-        name: 'custom-remix',
-        display: 'Remix ↗',
-        color: cyan,
-        customCommand: 'npm create remix@latest TARGET_DIR',
-      },
-    ],
-  },
-  {
-    name: 'preact',
-    display: 'Preact',
-    color: magenta,
-    variants: [
-      {
-        name: 'preact-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'preact',
-        display: 'JavaScript',
-        color: yellow,
-      },
-      {
-        name: 'custom-create-preact',
-        display: 'Customize with create-preact ↗',
-        color: magenta,
-        customCommand: 'npm create preact@latest TARGET_DIR',
-      },
-    ],
-  },
-  {
-    name: 'lit',
-    display: 'Lit',
-    color: redBright,
-    variants: [
-      {
-        name: 'lit-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'lit',
-        display: 'JavaScript',
-        color: yellow,
-      },
-    ],
-  },
-  {
-    name: 'svelte',
-    display: 'Svelte',
-    color: red,
-    variants: [
-      {
-        name: 'svelte-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'svelte',
-        display: 'JavaScript',
-        color: yellow,
-      },
-      {
-        name: 'custom-svelte-kit',
-        display: 'SvelteKit ↗',
-        color: red,
-        customCommand: 'npm exec sv create TARGET_DIR',
-      },
-    ],
-  },
-  {
-    name: 'solid',
-    display: 'Solid',
-    color: blue,
-    variants: [
-      {
-        name: 'solid-ts',
-        display: 'TypeScript',
-        color: blue,
-      },
-      {
-        name: 'solid',
-        display: 'JavaScript',
-        color: yellow,
-      },
-    ],
-  },
-  {
-    name: 'qwik',
-    display: 'Qwik',
-    color: blueBright,
-    variants: [
-      {
-        name: 'qwik-ts',
-        display: 'TypeScript',
-        color: blueBright,
-      },
-      {
-        name: 'qwik',
-        display: 'JavaScript',
-        color: yellow,
-      },
-      {
-        name: 'custom-qwik-city',
-        display: 'QwikCity ↗',
-        color: blueBright,
-        customCommand: 'npm create qwik@latest basic TARGET_DIR',
-      },
-    ],
-  },
-  {
-    name: 'angular',
-    display: 'Angular',
-    color: red,
-    variants: [
-      {
-        name: 'custom-angular',
-        display: 'Angular ↗',
-        color: red,
-        customCommand: 'npm exec @angular/cli@latest new TARGET_DIR',
-      },
-      {
-        name: 'custom-analog',
-        display: 'Analog ↗',
-        color: yellow,
-        customCommand: 'npm create analog@latest TARGET_DIR',
       },
     ],
   },
@@ -319,38 +147,7 @@ const renameFiles: Record<string, string | undefined> = {
 // 默认项目名称
 const defaultTargetDir = 'vite-project'
 
-/**
- * 初始化函数
- * 主要功能:
- * 1. 处理命令行参数
- *    - 获取目标目录参数(argTargetDir)
- *    - 获取模板参数(argTemplate)
- *    - 处理帮助命令(-h/--help)
- *
- * 2. 创建项目目录
- *    - 检查目标目录是否存在
- *    - 如果目录不为空,提供选项:清空或取消
- *    - 验证项目名称的合法性
- *
- * 3. 选择框架和变体
- *    - 如果未指定模板,提供交互式选择
- *    - 支持各种框架(Vue/React/Svelte等)
- *    - 支持 JavaScript/TypeScript 变体
- *
- * 4. 生成项目文件
- *    - 复制模板文件到目标目录
- *    - 处理特殊文件的重命名(.gitignore等)
- *    - 更新 package.json 配置
- *
- * 5. 安装依赖(可选)
- *    - 检测包管理器(npm/yarn/pnpm)
- *    - 执行依赖安装命令
- *
- * 6. 输出使用说明
- *    - 显示后续步骤指引
- *    - 提供启动开发服务器的命令
- */
-
+// 初始化函数-核心
 async function init() {
   // 获取并格式化目标目录参数
   const argTargetDir = formatTargetDir(argv._[0])
@@ -370,14 +167,6 @@ async function init() {
   // 获取项目名称的函数：如果目标目录是当前目录(.)，则使用当前目录名，否则使用目标目录名
   const getProjectName = () =>
     targetDir === '.' ? path.basename(path.resolve()) : targetDir
-
-  console.log({
-    targetDir,
-    argTargetDir,
-    defaultTargetDir,
-    argTemplate,
-    getProjectName: getProjectName(),
-  })
 
   // 声明用于存储用户交互结果的变量
   let result: prompts.Answers<
@@ -504,9 +293,9 @@ async function init() {
   }
 
   // 用户的选择:
-  // - framework: 选择的框架
+  // - framework: 选择的框架对象
   // - overwrite: yes: 删除现有文件并继续、no: 取消操作、ignore: 忽略文件并继续
-  // - packageName: 用户输入的项目名称
+  // - packageName: 用户在 projectName 输入不合法的名称，这里是再次输入的值
   // - variant: 框架变体-具体的模版
   const { framework, overwrite, packageName, variant } = result
 
@@ -600,6 +389,7 @@ async function init() {
     process.exit(status ?? 0)
   }
 
+  // 输出生成项目的路径
   console.log(`\nScaffolding project in ${root}...`)
 
   // 获取模板目录的绝对路径
